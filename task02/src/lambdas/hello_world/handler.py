@@ -25,7 +25,7 @@ class HelloWorld(AbstractLambda):
             status_code = 400
             response_body = {
                 "statusCode": status_code,
-                "message": f"Bad Request.Invalid request to {path} with method {method}"
+                "message": f"Bad request syntax or unsupported method. Request path: {path}. HTTP method: {method}"
             }
 
         return {
