@@ -12,8 +12,8 @@ class HelloWorld(AbstractLambda):
         pass
         
     def handle_request(self, event, context):
-        http_method = event.get("httpMethod", "UNKNOWN")
-        path = event.get("path", "UNKNOWN")
+        http_method = event.get("httpMethod", "")
+        path = event.get("path", "")
 
         if http_method == "GET" and path == "/hello":
             status_code = 200
