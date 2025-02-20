@@ -15,24 +15,21 @@ class HelloWorld(AbstractLambda):
         http_method = event.get("httpMethod", "UNKNOWN")
         path = event.get("path", "UNKNOWN")
 
-        headers = {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*"
-        }
-
         if http_method == "GET" and path == "/hello":
-            response_body = {"message": "Hello from Lambda"}
             status_code = 200
-        else:
             response_body = {
-                "error": "Bad Request",
-                "message": f"Invalid request to {path} with method {http_method}"
+                "statusCode": status_code,
+                "message": "Hello from Lambda"
             }
+        else:
             status_code = 400
+            response_body = {
+                "statusCode": status_code,
+                "message": f"Bad Request.Invalid request to {path} with method {http_method}"
+            }
 
         return {
             "statusCode": status_code,
-            "headers": headers,
             "body": json.dumps(response_body)
         }
     
