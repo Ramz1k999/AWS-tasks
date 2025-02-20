@@ -12,10 +12,10 @@ class HelloWorld(AbstractLambda):
         pass
         
     def handle_request(self, event, context):
-        http_method = event.get("httpMethod", "")
-        path = event.get("path", "")
+        method = event.get("requestContext", {}).get("http", {}).get("method", "")
+        path = event.get("rawPath", "/")
 
-        if http_method == "GET" and path == "/hello":
+        if method == "GET" and path == "/hello":
             status_code = 200
             response_body = {
                 "statusCode": status_code,
@@ -25,7 +25,7 @@ class HelloWorld(AbstractLambda):
             status_code = 400
             response_body = {
                 "statusCode": status_code,
-                "message": f"Bad Request.Invalid request to {path} with method {http_method}"
+                "message": f"Bad Request.Invalid request to {path} with method {method}"
             }
 
         return {
