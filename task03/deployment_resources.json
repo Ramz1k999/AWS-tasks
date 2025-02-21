@@ -27,23 +27,21 @@
   },
   "task3_api": {
     "resource_type": "api_gateway",
-    "deploy_stage": 3,
+    "deploy_stage": "api",
     "dependencies": [],
     "resources": {
       "/hello": {
+        "enable_cors": false,
         "GET": {
+          "authorization_type": "NONE",
           "integration_type": "lambda",
-          "integration_target": "hello_world",
-          "request_parameters": {},
-          "request_template": {},
-          "responses": {
-            "default": {
-              "status_code": 200,
-              "response_template": {
-                "application/json": "$input.json('$')"
-              }
-            }
-          }
+          "lambda_name": "hello_world",
+          "api_key_required": false,
+          "method_request_parameters": {},
+          "integration_request_body_template": {},
+          "responses": [],
+          "integration_responses": [],
+          "default_error_pattern": true
         }
       }
     },
