@@ -12,9 +12,9 @@ class HelloWorld(AbstractLambda):
         pass
         
     def handle_request(self, event, context):
-        request_path = event['resource']
+        path = event.get("rawPath", "/")
 
-        if request_path == '/hello':
+        if path == '/hello':
             return {
                 "statusCode": 200,
                 "body": json.dumps({"message": "Hello from Lambda"})
