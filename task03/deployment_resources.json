@@ -29,7 +29,24 @@
     "resource_type": "api_gateway",
     "deploy_stage": "task3_api",
     "dependencies": [],
-    "resources": {},
+    "resources": {
+      "/hello": {
+        "GET": {
+          "integration_type": "lambda",
+          "integration_target": "hello_world",
+          "request_parameters": {},
+          "request_template": {},
+          "responses": {
+            "default": {
+              "status_code": 200,
+              "response_template": {
+                "application/json": "$input.json('$')"
+              }
+            }
+          }
+        }
+      }
+    },
     "tags": {}
   }
 }
