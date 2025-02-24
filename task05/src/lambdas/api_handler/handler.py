@@ -27,49 +27,38 @@ class ApiHandler(AbstractLambda):
         """
 
         try:
-            # Parse request body
-            body = json.loads(event["body"])
+            body = json.loads(event.get("body", "{}"))  # Ensure event body is parsed
             principal_id = body.get("principalId")
             content = body.get("content")
 
-            # Validate request data
-            if not isinstance(principal_id, int) or not isinstance(content, dict):
+            # Validate input
+            if not principal_id or not content:
                 return {
                     "statusCode": 400,
-                    "body": json.dumps({
-                        "statusCode": 400,
-                        "error": "Invalid input: principalId must be int, content must be an object."})
+                    "body": json.dumps({"error": "Missing principalId or content"})
                 }
 
-            # Generate unique event ID
-            event_id = str(uuid.uuid4())
-            created_at = datetime.utcnow().isoformat() + "Z"
-
-            # Construct event object
-            event_item = {
-                "id": event_id,
-                "principalId": principal_id,
-                "createdAt": created_at,
+            # Create event object
+            new_event = {
+                "id": str(uuid.uuid4()),
+                "principalId": int(principal_id),
+                "createdAt": datetime.utcnow().isoformat() + "Z",
                 "body": content
             }
 
             # Save to DynamoDB
-            table.put_item(Item=event_item)
-            logger.info(f"Event saved: {event_item}")
+            table.put_item(Item=new_event)
 
-            # Return response
             return {
                 "statusCode": 201,
-                "body": json.dumps({"statusCode": 201, "event": event_item})
+                "body": json.dumps({"event": new_event})
             }
 
         except Exception as e:
-            logger.error(f"Error saving event: {str(e)}")
+            print(f"Error: {str(e)}")  # Logs error to CloudWatch
             return {
                 "statusCode": 500,
-                "body": json.dumps({
-                    "statusCode": 500,
-                    "error": "Internal Server Error"})
+                "body": json.dumps({"error": "Internal Server Error"})
             }
 
 
