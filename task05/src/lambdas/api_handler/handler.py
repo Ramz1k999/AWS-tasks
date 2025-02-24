@@ -36,7 +36,9 @@ class ApiHandler(AbstractLambda):
             if not isinstance(principal_id, int) or not isinstance(content, dict):
                 return {
                     "statusCode": 400,
-                    "body": json.dumps({"error": "Invalid input: principalId must be int, content must be an object."})
+                    "body": json.dumps({
+                        "statusCode": 400,
+                        "error": "Invalid input: principalId must be int, content must be an object."})
                 }
 
             # Generate unique event ID
@@ -65,7 +67,9 @@ class ApiHandler(AbstractLambda):
             logger.error(f"Error saving event: {str(e)}")
             return {
                 "statusCode": 500,
-                "body": json.dumps({"error": "Internal Server Error"})
+                "body": json.dumps({
+                    "statusCode": 500,
+                    "error": "Internal Server Error"})
             }
 
 
