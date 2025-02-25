@@ -20,8 +20,9 @@ import com.syndicate.deployment.annotations.lambda.LambdaHandler;
 import com.syndicate.deployment.model.Architecture;
 import com.syndicate.deployment.model.DeploymentRuntime;
 import com.syndicate.deployment.model.RetentionSetting;
-import org.joda.time.DateTimeZone;
-import org.joda.time.format.ISODateTimeFormat;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 
 
 import java.time.Instant;
@@ -70,7 +71,8 @@ public class ApiHandler implements RequestHandler<Map<String, Object>, Map<Strin
 
             // Generate Event Data
             String eventId = UUID.randomUUID().toString();
-            String createdAt = Instant.now().toString();
+            String createdAt = DateTimeFormatter.ISO_INSTANT
+                .format(Instant.now().truncatedTo(ChronoUnit.MILLIS));
 
             // Save to DynamoDB
             Item item = new Item()
