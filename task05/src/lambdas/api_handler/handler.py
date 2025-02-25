@@ -14,7 +14,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 dynamodb = boto3.resource("dynamodb")
-table_name = os.environ['target_table']
+table_name = os.environ.get('target_table')
 table = dynamodb.Table(table_name)
 
 class ApiHandler(AbstractLambda):
