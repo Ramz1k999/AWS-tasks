@@ -7,16 +7,11 @@
             "logs:CreateLogGroup",
             "logs:CreateLogStream",
             "logs:PutLogEvents",
-            "dynamodb:GetItem",
-            "dynamodb:Query",
-            "dynamodb:PutItem",
-            "dynamodb:Batch*",
-            "dynamodb:DeleteItem",
+            "dynamodb:*",
             "ssm:PutParameter",
             "ssm:GetParameter",
             "kms:Decrypt",
-            "kinesis:ListStreams",
-            "kinesis:DescribeStream"
+            "kinesis:*"
           ],
           "Effect": "Allow",
           "Resource": "*"
