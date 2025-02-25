@@ -14,7 +14,8 @@ logger.setLevel(logging.INFO)
 
 # Initialize DynamoDB client
 dynamodb = boto3.resource("dynamodb")
-table = dynamodb.Table("Events")
+table_name = "Events"
+table = dynamodb.Table(table_name)
 
 class ApiHandler(AbstractLambda):
 
@@ -22,43 +23,47 @@ class ApiHandler(AbstractLambda):
         pass
         
     def handle_request(self, event, context):
-        """
-        Explain incoming event here
-        """
 
         try:
-            body = json.loads(event.get("body", "{}"))  # Ensure event body is parsed
-            principal_id = body.get("principalId")
-            content = body.get("content")
+            body = json.loads(event["body"])
+            principal_id = body.get('principalId')
+            content = body.get('content')
 
-            # Validate input
-            if not principal_id or not content:
+            # Validation
+            if not isinstance(principal_id, int) or not isinstance(content, dict):
                 return {
                     "statusCode": 400,
-                    "body": json.dumps({"error": "Missing principalId or content"})
+                    "message": "Invalid input. 'principalId' must be an integer and 'content' must be a map."
                 }
 
-            # Create event object
-            new_event = {
-                "id": str(uuid.uuid4()),
-                "principalId": int(principal_id),
-                "createdAt": datetime.utcnow().isoformat() + "Z",
-                "body": content
-            }
+            # Generate event data
+            event_id = str(uuid.uuid4())
+            created_at = datetime.utcnow().isoformat() + 'Z'
 
             # Save to DynamoDB
-            table.put_item(Item=new_event)
+            table.put_item(Item={
+                "id": event_id,
+                "principalId": principal_id,
+                "createdAt": created_at,
+                "body": content
+            })
 
+            # Construct the response
             return {
                 "statusCode": 201,
-                "body": json.dumps({"event": new_event})
+                "event": {
+                    "id": event_id,
+                    "principalId": principal_id,
+                    "createdAt": created_at,
+                    "body": content
+                }
             }
 
         except Exception as e:
-            print(f"Error: {str(e)}")  # Logs error to CloudWatch
+            print(f"Error: {str(e)}")
             return {
                 "statusCode": 500,
-                "body": json.dumps({"error": "Internal Server Error"})
+                "message": "Internal Server Error"
             }
 
 

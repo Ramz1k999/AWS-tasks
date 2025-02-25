@@ -16,7 +16,7 @@
   },
   "publish_version": true,
   "alias": "learn",
-  "url_config": {"auth_type":"NONE"},
+  "url_config": {},
   "ephemeral_storage": 512,
   "logs_expiration": "${logs_expiration}",
   "tags": {}
