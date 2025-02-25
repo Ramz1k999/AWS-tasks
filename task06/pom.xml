@@ -31,6 +31,40 @@
             <artifactId>deployment-configuration-annotations</artifactId>
             <version>${syndicate.java.plugin.version}</version>
         </dependency>
+        <!-- AWS SDK for DynamoDB -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>dynamodb</artifactId>
+            <version>2.20.0</version> <!-- Use the latest version if available -->
+        </dependency>
+
+        <!-- AWS Lambda Java Core -->
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-lambda-java-core</artifactId>
+            <version>1.2.1</version>
+        </dependency>
+
+        <!-- AWS Lambda Java Events (for DynamoDB Streams) -->
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-lambda-java-events</artifactId>
+            <version>3.11.1</version>
+        </dependency>
+
+        <!-- AWS SDK for DynamoDB Document API -->
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-dynamodb</artifactId>
+            <version>1.12.470</version>
+        </dependency>
+
+        <!-- Jackson for JSON processing -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.15.0</version>
+        </dependency>
     </dependencies>
 
     <build>
