@@ -13,9 +13,7 @@ _LOG = get_logger(__name__)
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-dynamodb = boto3.resource("dynamodb")
-table_name = os.environ.get('target_table')
-table = dynamodb.Table(table_name)
+
 
 class ApiHandler(AbstractLambda):
 
@@ -23,6 +21,9 @@ class ApiHandler(AbstractLambda):
         pass
         
     def handle_request(self, event, context):
+        dynamodb = boto3.resource("dynamodb")
+        table_name = os.environ.get('target_table')
+        table = dynamodb.Table(table_name)
 
         try:
             body = json.loads(event["body"])
