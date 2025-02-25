@@ -1,4 +1,5 @@
 import json
+import os
 import uuid
 import boto3
 import logging
@@ -13,7 +14,8 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 dynamodb = boto3.resource("dynamodb")
-table = dynamodb.Table("Events")
+table_name = os.environ.get('target_table')
+table = dynamodb.Table(table_name)
 
 class ApiHandler(AbstractLambda):
 
