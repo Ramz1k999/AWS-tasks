@@ -1,5 +1,6 @@
-import json
 import os
+
+import json
 import uuid
 import boto3
 import logging
@@ -22,8 +23,8 @@ class ApiHandler(AbstractLambda):
         
     def handle_request(self, event, context):
         dynamodb = boto3.resource("dynamodb")
-        table_name = os.environ.get('target_table')
-        table = dynamodb.Table(table_name)
+        os.environ['target_table'] = "Events"
+        table = dynamodb.Table(os.environ['target_table'])
 
         try:
             body = json.loads(event["body"])
