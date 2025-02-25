@@ -23,8 +23,7 @@ class ApiHandler(AbstractLambda):
         
     def handle_request(self, event, context):
         dynamodb = boto3.resource("dynamodb")
-        os.environ['target_table'] = "Events"
-        table = dynamodb.Table(os.environ['target_table'])
+        table = dynamodb.Table(os.getenv('target_table'))
 
         try:
             body = json.loads(event["body"])

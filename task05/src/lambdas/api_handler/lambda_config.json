@@ -10,12 +10,12 @@
   "lambda_path": "lambdas\\api_handler",
   "dependencies": [
      {
-       "resource_name": "Events",
+       "resource_name": "${target_table}",
        "resource_type": "dynamodb_table"
      }
   ],
   "env_variables": {
-    "target_table": "Events"
+    "target_table": "${target_table}"
   },
   "publish_version": true,
   "alias": "learn",
