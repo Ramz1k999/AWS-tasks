@@ -2,19 +2,19 @@ import json
 import uuid
 import boto3
 import logging
+import os
 from datetime import datetime
 
 from commons.log_helper import get_logger
 from commons.abstract_lambda import AbstractLambda
 
 _LOG = get_logger(__name__)
-# Configure logger
+
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-# Initialize DynamoDB client
 dynamodb = boto3.resource("dynamodb")
-table_name = "Events"
+table_name = os.environ.get('target_table')
 table = dynamodb.Table(table_name)
 
 class ApiHandler(AbstractLambda):
@@ -40,7 +40,6 @@ class ApiHandler(AbstractLambda):
             event_id = str(uuid.uuid4())
             created_at = datetime.utcnow().isoformat() + 'Z'
 
-            # Save to DynamoDB
             table.put_item(Item={
                 "id": event_id,
                 "principalId": principal_id,
@@ -48,7 +47,6 @@ class ApiHandler(AbstractLambda):
                 "body": content
             })
 
-            # Construct the response
             return {
                 "statusCode": 201,
                 "event": {
