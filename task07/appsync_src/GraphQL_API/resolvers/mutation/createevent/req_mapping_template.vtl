@@ -1,22 +1,12 @@
-#**Resolvers with None data sources can locally publish events that fire
-                subscriptions or otherwise transform data without hitting a backend data source.
-                The value of 'payload' is forwarded to $ctx.result in the response mapping template.
-                *#
-## Generate a unique UUID and timestamp
-#set($id = $util.autoId())
-#set($createdAt = $util.time.nowISO8601())
-
 {
-    "version": "2018-05-29",
-    "operation": "PutItem",
-    "key": {
-        "id": { "S": "$id" }
-    },
-    "attributeValues": {
-        "id": { "S": "$id" },
-        "userId": { "N": "$ctx.args.userId" },
-        "createdAt": { "S": "$createdAt" },
-        "payLoad": { "M": $util.parseJson($ctx.args.payLoad) }
-    }
+  "version": "2018-05-29",
+  "operation": "PutItem",
+  "key": {
+    "id": { "S": "$util.autoId()" }
+  },
+  "attributeValues": {
+    "userId": { "N": "$ctx.args.userId" },
+    "createdAt": { "S": "$util.time.nowISO8601()" },
+    "payLoad": { "S": "$util.toJson($ctx.args.payLoad)" }
+  }
 }
-                            

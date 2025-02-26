@@ -1,4 +1,10 @@
+## Check if there is an error
+#if($ctx.error)
+  $util.error($ctx.error.message, $ctx.error.type)
+#end
+
+## Return the created event
 {
-    "id": $util.toJson($ctx.result.id),
-    "createdAt": $util.toJson($ctx.result.createdAt)
+  "id": "$ctx.result.id",
+  "createdAt": "$ctx.result.createdAt"
 }
