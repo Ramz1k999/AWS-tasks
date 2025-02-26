@@ -42,7 +42,9 @@
   "appsync_role": {
     "resource_type": "iam_role",
     "principal_service": "appsync",
-    "predefined_policies": [],
+    "predefined_policies": [
+      "AWSAppSyncInvokeFullAccess"
+    ],
     "custom_policies": [
       "appsync_policy"
     ],
