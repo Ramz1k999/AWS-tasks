@@ -30,6 +30,7 @@ import java.util.UUID;
 	roleName = "audit_producer-role",
 	runtime = DeploymentRuntime.JAVA17,
 	isPublishVersion = false,
+	aliasName = "learn",
 	logsExpiration = RetentionSetting.SYNDICATE_ALIASES_SPECIFIED
 )
 @DependsOn(name = "Configuration", resourceType = ResourceType.DYNAMODB_TABLE)
@@ -66,7 +67,9 @@ public class AuditProducer implements RequestHandler<DynamodbEvent, String> {
         Item auditItem = new Item()
             .withPrimaryKey("id", UUID.randomUUID().toString())
             .withString("itemKey", key)
-            .withString("modificationTime", Instant.now().toString())
+            .withString("modificationTime", Instant.now()
+        .atOffset(ZoneOffset.UTC)
+        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")))
             .withMap("newValue", Map.of("key", key, "value", value));
 
         auditTable.putItem(auditItem);
@@ -81,7 +84,9 @@ public class AuditProducer implements RequestHandler<DynamodbEvent, String> {
             Item auditItem = new Item()
                 .withPrimaryKey("id", UUID.randomUUID().toString())
                 .withString("itemKey", key)
-                .withString("modificationTime", Instant.now().toString())
+                .withString("modificationTime", Instant.now()
+        .atOffset(ZoneOffset.UTC)
+        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")))
                 .withString("updatedAttribute", "value")
                 .withInt("oldValue", oldValue)
                 .withInt("newValue", newValue);
