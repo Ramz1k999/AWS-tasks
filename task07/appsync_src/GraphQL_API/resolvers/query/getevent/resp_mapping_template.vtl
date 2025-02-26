@@ -1,0 +1,10 @@
+#if($ctx.result == null)
+    $util.error("Event not found", "NotFound")
+#end
+
+{
+    "id": $util.toJson($ctx.result.id),
+    "userId": $util.toJson($ctx.result.userId),
+    "createdAt": $util.toJson($ctx.result.createdAt),
+    "payLoad": $util.toJson($ctx.result.payLoad)
+}
