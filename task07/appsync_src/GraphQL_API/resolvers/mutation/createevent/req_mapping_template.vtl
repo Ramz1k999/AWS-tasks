@@ -1,12 +1,12 @@
 {
-  "version": "2018-05-29",
-  "operation": "PutItem",
-  "key": {
-    "id": { "S": "$util.autoId()" }
-  },
-  "attributeValues": {
-    "userId": { "N": "$ctx.args.userId" },
-    "createdAt": { "S": "$util.time.nowISO8601()" },
-    "payLoad": { "S": "$util.toJson($ctx.args.payLoad)" }
-  }
+     "version" : "2018-05-29",
+     "operation" : "PutItem",
+     "key": {
+          "id": $util.dynamodb.toDynamoDBJson($util.autoId())
+     },
+     "attributeValues": {
+          "userId": $util.dynamodb.toDynamoDBJson($ctx.args.input.userId),
+          "createdAt": $util.dynamodb.toDynamoDBJson($util.time.nowISO8601()),
+          "payLoad": $util.dynamodb.toDynamoDBJson($ctx.args.input.payLoad)
+     }
 }
