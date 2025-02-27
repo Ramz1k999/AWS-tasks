@@ -45,7 +45,7 @@ public class UuidGenerator implements RequestHandler<Object, Map<String, Object>
 
         JSONObject json = new JSONObject();
         json.put("ids", uuids);
-        String timestamp = Instant.now().toString();
+        String timestamp = Instant.now().toString().substring(0, 23) + "Z";
 
         byte[] jsonBytes = json.toString(4).getBytes(StandardCharsets.UTF_8);
         ByteArrayInputStream inputStream = new ByteArrayInputStream(jsonBytes);
