@@ -29,11 +29,12 @@ import com.syndicate.deployment.model.DeploymentRuntime;
 @EventBridgeRuleSource(targetRule = "uuid_trigger")
 @EnvironmentVariables(value = {
     @EnvironmentVariable(key = "region", value = "${region}"),
-    @EnvironmentVariable(key = "target_bucket", value = "${target_bucket}") // Fixed extra bracket
+    @EnvironmentVariable(key = "target_bucket", value = "${target_bucket}")
 })
 public class UuidGenerator implements RequestHandler<Object, Map<String, Object>> {
 
-    private static final String BUCKET_NAME = System.getenv("target_bucket"); // Moved outside method
+    private static final String BUCKET_NAME = Optional.ofNullable(System.getenv("target_bucket"));
+
     private final AmazonS3 s3Client = AmazonS3ClientBuilder.standard().build();
 
     @Override
@@ -45,7 +46,12 @@ public class UuidGenerator implements RequestHandler<Object, Map<String, Object>
 
         JSONObject json = new JSONObject();
         json.put("ids", uuids);
-        String timestamp = Instant.now().toString();
+
+
+        String timestamp = Instant.now().toString().replace(":", "-").replace(".", "-");
+
+
+        String filename = "uuid-file-" + UUID.randomUUID() + "-" + timestamp + ".json";
 
         byte[] jsonBytes = json.toString(4).getBytes(StandardCharsets.UTF_8);
         ByteArrayInputStream inputStream = new ByteArrayInputStream(jsonBytes);
@@ -58,13 +64,13 @@ public class UuidGenerator implements RequestHandler<Object, Map<String, Object>
         // Upload JSON to S3
         Map<String, Object> response = new HashMap<>();
         try {
-            s3Client.putObject(BUCKET_NAME, timestamp, inputStream, metadata);
+            s3Client.putObject(BUCKET_NAME, filename, inputStream, metadata);
             response.put("status", "success");
-            response.put("message", "File " + timestamp + " created in S3");
+            response.put("message", "File " + filename + " created in S3");
         } catch (Exception e) {
             response.put("status", "error");
             response.put("message", "Error uploading file: " + e.getMessage());
         }
-        return response; // Return a Map instead of String
+        return response;
     }
 }
