@@ -1,6 +1,6 @@
 {
-    "id": $util.dynamodb.toDynamoDBJson($ctx.result.id),
-    "userId": $util.dynamodb.toDynamoDBJson($ctx.result.userId),
-    "createdAt": $util.dynamodb.toDynamoDBJson($ctx.result.createdAt),
-    "payLoad": $util.dynamodb.toDynamoDBJson($ctx.result.payLoad)
+    "id": $ctx.result.id,
+    "userId": $ctx.result.userId,
+    "createdAt": $ctx.result.createdAt,
+    "payLoad": $ctx.result.payLoad
 }
