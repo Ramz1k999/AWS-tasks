@@ -15,6 +15,7 @@ import com.syndicate.deployment.model.RetentionSetting;
 import com.syndicate.deployment.model.lambda.url.AuthType;
 import com.syndicate.deployment.model.lambda.url.InvokeMode;
 
+
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -71,7 +72,7 @@ public class ApiHandler implements RequestHandler<Object, String> {
             return transformWeatherJson(json);
         } catch (IOException e) {
             throw new Exception("Network error while fetching weather data", e);
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             throw new Exception("Error processing weather data JSON", e);
         }
     }
