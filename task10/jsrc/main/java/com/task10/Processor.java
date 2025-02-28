@@ -86,12 +86,15 @@ public class Processor implements RequestHandler<Object, String> {
         }
 
         try {
+            AWSXRay.beginSegment("Processor");
+
             String weatherJson = getWeatherForecast(URL);
 
             Map<String, AttributeValue> weatherEntry = transformWeatherJsonToMap(weatherJson);
 
             logger.log("Weather Data: " + weatherEntry);
 
+            AWSXRay.endSegment();
             storeDataInDynamoDB(weatherEntry);
 
             return weatherEntry.toString();
@@ -150,11 +153,8 @@ private static Map<String, AttributeValue> transformWeatherJsonToMap(String json
     }
 
     private void storeDataInDynamoDB(Map<String, AttributeValue> weatherData) {
-        AmazonDynamoDB dynamoDBClient = AmazonDynamoDBClientBuilder.defaultClient();
-        DynamoDB dynamoDB = new DynamoDB(dynamoDBClient);
-
         // Get the table and prepare an item to insert
-        Table table = dynamoDB.getTable(tableName);
+        Table table = dynamoDBClient.getTable(tableName);
         Item item = new Item().withPrimaryKey("id", weatherData.get("id").getS())
                 .withMap("forecast", weatherData.get("forecast").getM());
 
