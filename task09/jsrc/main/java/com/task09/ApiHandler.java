@@ -45,15 +45,26 @@ public class ApiHandler implements RequestHandler<Object, String> {
 	@Override
 	public String handleRequest(Object input, Context context) {
 		LambdaLogger logger = context.getLogger();
-		try {
-			String response = fetchWeatherDataUsingOpenMeteo();
-			logger.log("Weather Data: " + response);
-			return response;
-		} catch (Exception e) {
-			logger.log("Error: " + e.getMessage());
-			return "Failed to fetch weather data";
-		}
-	}
+		// Get the request path and method from the event input
+        String method = (String) ((java.util.Map<String, Object>) input).get("requestContext")
+                .get("http").get("method");
+        String path = (String) ((java.util.Map<String, Object>) input).get("rawPath");
+
+        // Check if the request is valid
+        if (!"/weather".equals(path) || !"GET".equals(method)) {
+            return generateBadRequestResponse(path, method);
+        }
+
+        try {
+            String response = fetchWeatherDataUsingOpenMeteo();
+            logger.log("Weather Data: " + response);
+            return response;
+        } catch (Exception e) {
+            logger.log("Error: " + e.getMessage());
+            return "Failed to fetch weather data";
+        }
+    }
+
 
 	public static String fetchWeatherDataUsingOpenMeteo() throws Exception {
 		String json = getWeatherForecast(URL);
