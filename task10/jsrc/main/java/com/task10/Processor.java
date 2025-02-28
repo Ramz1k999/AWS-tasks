@@ -90,16 +90,16 @@ public class Processor implements RequestHandler<Object, String> {
         try {
             AWSXRay.beginSegment("Processor");
 
-            dynamoDBClient.putItem(new PutItemRequest().withTableName(tableName).withItem(weatherEntry));
 
             String weatherJson = getWeatherForecast(URL);
 
             Map<String, AttributeValue> weatherEntry = transformWeatherJsonToMap(weatherJson);
 
+            dynamoDBClient.putItem(new PutItemRequest().withTableName(tableName).withItem(weatherEntry));
+
             logger.log("Weather Data: " + weatherEntry);
 
             AWSXRay.endSegment();
-            storeDataInDynamoDB(weatherEntry);
 
             return weatherEntry.toString();
         } catch (Exception e) {
