@@ -48,6 +48,12 @@ public class ApiHandler implements RequestHandler<Object, String> {
 	private static final String URL = "https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&" +
 			"current=temperature_2m,wind_speed_10m&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m";
 
+	private final AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard()
+			.withRegion("eu-central-1")
+			.build();
+	private final String tableName = System.getenv("table");
+
+
 	@Override
 	public String handleRequest(Object input, Context context) {
 		LambdaLogger logger = context.getLogger();
@@ -65,6 +71,7 @@ public class ApiHandler implements RequestHandler<Object, String> {
         try {
             String response = fetchWeatherDataUsingOpenMeteo();
             logger.log("Weather Data: " + response);
+            storeDataInDynamoDB(response);
             return response;
         } catch (Exception e) {
             logger.log("Error: " + e.getMessage());
@@ -98,6 +105,22 @@ public class ApiHandler implements RequestHandler<Object, String> {
 		return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(finalJson);
 
 	}
+
+	private void storeDataInDynamoDB(String weatherData) {
+        JsonNode weatherJson;
+        try {
+            weatherJson = mapper.readTree(weatherData);
+
+            Table table = dynamoDBClient.getTable(tableName);
+            table.putItem(new PutItemSpec()
+                    .withItem(new ValueMap()
+                            .with("id", UUID.randomUUID().toString())
+                            .with("forecast", weatherJson.toString())
+                    ));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to store weather data in DynamoDB", e);
+        }
+    }
 
 	private String generateBadRequestResponse(String path, String method) {
         try {
