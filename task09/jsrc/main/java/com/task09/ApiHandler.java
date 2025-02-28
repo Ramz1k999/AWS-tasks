@@ -15,75 +15,94 @@ import com.syndicate.deployment.model.RetentionSetting;
 import com.syndicate.deployment.model.lambda.url.AuthType;
 import com.syndicate.deployment.model.lambda.url.InvokeMode;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
 import static com.openmeteo.OpenMeteoApiClient.getWeatherForecast;
 
 @LambdaHandler(
     lambdaName = "api_handler",
-	roleName = "api_handler-role",
-	layers = {"sdk-layer"},
-	runtime = DeploymentRuntime.JAVA17,
-	isPublishVersion = false,
-	aliasName = "learn",
-	logsExpiration = RetentionSetting.SYNDICATE_ALIASES_SPECIFIED
+    roleName = "api_handler-role",
+    layers = {"sdk-layer"},
+    runtime = DeploymentRuntime.JAVA17,
+    isPublishVersion = false,
+    aliasName = "learn",
+    logsExpiration = RetentionSetting.SYNDICATE_ALIASES_SPECIFIED
 )
 @LambdaLayer(
-        layerName = "sdk-layer",
-		libraries = {"lib/open-meteo-1.0-SNAPSHOT.jar"},
-		runtime = DeploymentRuntime.JAVA17,
-		artifactExtension = ArtifactExtension.ZIP
+    layerName = "sdk-layer",
+    libraries = {"lib/open-meteo-1.0-SNAPSHOT.jar"},
+    runtime = DeploymentRuntime.JAVA17,
+    artifactExtension = ArtifactExtension.ZIP
 )
 @LambdaUrlConfig(
-        authType = AuthType.NONE,
-		invokeMode = InvokeMode.BUFFERED
+    authType = AuthType.NONE,
+    invokeMode = InvokeMode.BUFFERED
 )
 public class ApiHandler implements RequestHandler<Object, String> {
 
-	private static final ObjectMapper mapper = new ObjectMapper();
-	private static final String URL = "https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&" +
-			"current=temperature_2m,wind_speed_10m&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m";
+    private static final ObjectMapper mapper = new ObjectMapper();
+    private static final String URL = System.getenv("OPEN_METEO_API_URL");
 
-	@Override
-	public String handleRequest(Object input, Context context) {
-		LambdaLogger logger = context.getLogger();
-		try {
-			String response = fetchWeatherDataUsingOpenMeteo();
-			logger.log("Weather Data: " + response);
-			return response;
-		} catch (Exception e) {
-			logger.log("Error: " + e.getMessage());
-			return generateBadRequestResponse("Failed to fetch weather data");
-		}
-	}
+    @Override
+    public String handleRequest(Object input, Context context) {
+        LambdaLogger logger = context.getLogger();
+        logger.log("Received request: " + input);
 
-	public static String fetchWeatherDataUsingOpenMeteo() throws Exception {
-		String json = getWeatherForecast(URL);
+        if (URL == null) {
+            logger.log("Error: OPEN_METEO_API_URL environment variable not set.");
+            return generateBadRequestResponse("Internal server error");
+        }
 
-		return transformWeatherJson(json);
-	}
+        try {
+            String response = fetchWeatherDataUsingOpenMeteo();
+            logger.log("Weather Data successfully fetched");
+            return response;
+        } catch (Exception e) {
+            logger.log("Error fetching weather data: " + e.getMessage());
+            return generateBadRequestResponse("Failed to fetch weather data");
+        }
+    }
 
-	public static String transformWeatherJson(String json) throws Exception {
-		JsonNode root = mapper.readTree(json);
-		ObjectNode finalJson = mapper.createObjectNode();
+    public static String fetchWeatherDataUsingOpenMeteo() throws Exception {
+        try {
+            String json = getWeatherForecast(URL);
+            return transformWeatherJson(json);
+        } catch (IOException e) {
+            throw new Exception("Network error while fetching weather data", e);
+        } catch (JsonProcessingException e) {
+            throw new Exception("Error processing weather data JSON", e);
+        }
+    }
 
-		finalJson.put("latitude", root.path("latitude").asDouble());
-		finalJson.put("longitude", root.path("longitude").asDouble());
-		finalJson.put("generationtime_ms", root.path("generationtime_ms").asDouble());
-		finalJson.put("utc_offset_seconds", root.path("utc_offset_seconds").asInt());
-		finalJson.put("timezone", root.path("timezone").asText());
-		finalJson.put("timezone_abbreviation", root.path("timezone_abbreviation").asText());
-		finalJson.put("elevation", root.path("elevation").asDouble());
-		finalJson.set("hourly_units", root.path("hourly_units"));
-		finalJson.set("hourly", root.path("hourly"));
-		finalJson.set("current_units", root.path("current_units"));
-		finalJson.set("current", root.path("current"));
+    public static String transformWeatherJson(String json) throws Exception {
+        JsonNode root = mapper.readTree(json);
 
-		return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(finalJson);
-	}
+        if (root == null || root.get("latitude") == null) {
+            throw new Exception("Invalid weather data received");
+        }
 
-	private String generateBadRequestResponse(String message) {
-		ObjectNode errorResponse = mapper.createObjectNode();
-		errorResponse.put("statusCode", 400);
-		errorResponse.put("message", message);
-		return errorResponse.toString();
-	}
+        ObjectNode finalJson = mapper.createObjectNode();
+        finalJson.put("latitude", root.path("latitude").asDouble());
+        finalJson.put("longitude", root.path("longitude").asDouble());
+        finalJson.put("generationtime_ms", root.path("generationtime_ms").asDouble());
+        finalJson.put("utc_offset_seconds", root.path("utc_offset_seconds").asInt());
+        finalJson.put("timezone", root.path("timezone").asText());
+        finalJson.put("timezone_abbreviation", root.path("timezone_abbreviation").asText());
+        finalJson.put("elevation", root.path("elevation").asDouble());
+        finalJson.set("hourly_units", root.path("hourly_units"));
+        finalJson.set("hourly", root.path("hourly"));
+        finalJson.set("current_units", root.path("current_units"));
+        finalJson.set("current", root.path("current"));
+
+        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(finalJson);
+    }
+
+    private String generateBadRequestResponse(String message) {
+        ObjectNode errorResponse = mapper.createObjectNode();
+        errorResponse.put("statusCode", 400);
+        errorResponse.put("message", message);
+        return errorResponse.toString();
+    }
 }
