@@ -46,6 +46,7 @@ import java.util.stream.StreamSupport;
 	runtime = DeploymentRuntime.JAVA17,
 	tracingMode = TracingMode.Active,
 	isPublishVersion = false,
+    aliasName = "learn"
 	logsExpiration = RetentionSetting.SYNDICATE_ALIASES_SPECIFIED
 )
 @LambdaLayer(layerName = "sdk-layer",
