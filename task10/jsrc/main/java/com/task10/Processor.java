@@ -10,9 +10,14 @@ import com.syndicate.deployment.model.ArtifactExtension;
 import com.syndicate.deployment.model.DeploymentRuntime;
 import com.syndicate.deployment.model.RetentionSetting;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.dynamodbv2.document.DynamoDB;
+import com.amazonaws.services.dynamodbv2.document.Table;
+import com.amazonaws.services.dynamodbv2.document.spec.PutItemSpec;
+import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
+import com.amazonaws.services.dynamodbv2.document.Item;
+import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.syndicate.deployment.annotations.environment.EnvironmentVariable;
 import com.syndicate.deployment.annotations.environment.EnvironmentVariables;
 import com.syndicate.deployment.annotations.resources.DependsOn;
@@ -57,17 +62,17 @@ import java.util.stream.StreamSupport;
 		@EnvironmentVariable(key = "target_table", value = "${target_table}")
 })
 
-public class Processor implements RequestHandler<Object, Map<String, Object>> {
+public class Processor implements RequestHandler<Object, String> {
 
     private static final ObjectMapper mapper = new ObjectMapper();
-	private static final String URL = "https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&" +
-			"current=temperature_2m,wind_speed_10m&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m";
-    private final AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard()
+	private static final String URL = "https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&current=temperature_2m,wind_speed_10m&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m";
+    private final AmazonDynamoDB dynamoDBClient = AmazonDynamoDBClientBuilder.standard()
 			.withRegion("eu-central-1")
 			.build();
-	private final String tableName = System.getenv("table");
+	private final String tableName = System.getenv("target_table");
 
-	public Map<String, Object> handleRequest(Object request, Context context) {
+	@Override
+	public String handleRequest(Object input, Context context) {
 		LambdaLogger logger = context.getLogger();
 
         JsonNode inputNode = mapper.valueToTree(input);
@@ -75,58 +80,97 @@ public class Processor implements RequestHandler<Object, Map<String, Object>> {
         String method = inputNode.path("requestContext").path("http").path("method").asText();
         String path = inputNode.path("rawPath").asText();
 
-        // Check if the request is valid
         if (!"/weather".equals(path) || !"GET".equals(method)) {
             return generateBadRequestResponse(path, method);
         }
 
         try {
-            String response = fetchWeatherDataUsingOpenMeteo();
-            logger.log("Weather Data: " + response);
-            storeDataInDynamoDB(response);
-            return response;
+            String weatherJson = getWeatherForecast(URL);
+
+            Map<String, AttributeValue> weatherEntry = transformWeatherJsonToMap(weatherJson);
+
+            logger.log("Weather Data: " + weatherEntry);
+
+            storeDataInDynamoDB(weatherEntry);
+
+            return weatherEntry.toString();
         } catch (Exception e) {
             logger.log("Error: " + e.getMessage());
             return "Failed to fetch weather data";
         }
 	}
 
-	public static String fetchWeatherDataUsingOpenMeteo() throws Exception {
-        String json = getWeatherForecast(URL);
-        return transformWeatherJson(json);
-    }
 
-
-	public static String transformWeatherJson(String json) throws Exception {
+private static Map<String, AttributeValue> transformWeatherJsonToMap(String json) throws Exception {
         JsonNode root = mapper.readTree(json);
-        ObjectNode finalJson = mapper.createObjectNode();
+        Map<String, AttributeValue> weatherEntry = new HashMap<>();
 
-        finalJson.put("latitude", root.path("latitude").asDouble());
-        finalJson.put("longitude", root.path("longitude").asDouble());
-        finalJson.put("generationtime_ms", root.path("generationtime_ms").asDouble());
-        finalJson.put("utc_offset_seconds", root.path("utc_offset_seconds").asInt());
-        finalJson.put("timezone", root.path("timezone").asText());
-        finalJson.put("timezone_abbreviation", root.path("timezone_abbreviation").asText());
-        finalJson.put("elevation", root.path("elevation").asDouble());
-        finalJson.set("hourly_units", root.path("hourly_units"));
-        finalJson.set("hourly", root.path("hourly"));
+        // Add the UUID id to the weather entry
+        weatherEntry.put("id", new AttributeValue().withS(UUID.randomUUID().toString()));
 
-        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(finalJson);
+        // Process the forecast
+        Map<String, AttributeValue> forecast = new HashMap<>();
+        forecast.put("elevation", new AttributeValue().withN(String.valueOf(root.path("elevation").asInt())));
+        forecast.put("generationtime_ms", new AttributeValue().withN(String.valueOf(root.path("generationtime_ms").asInt())));
+
+        // Process hourly data
+        JsonNode hourlyNode = root.path("hourly");
+        Map<String, AttributeValue> hourly = new HashMap<>();
+        hourly.put("temperature_2m", new AttributeValue().withL(
+                StreamSupport.stream(hourlyNode.path("temperature_2m").spliterator(), false)
+                        .map(node -> new AttributeValue().withN(String.valueOf(node.asDouble())))
+                        .collect(Collectors.toList())
+        ));
+        hourly.put("time", new AttributeValue().withL(
+                StreamSupport.stream(hourlyNode.path("time").spliterator(), false)
+                        .map(node -> new AttributeValue().withS(node.asText()))
+                        .collect(Collectors.toList())
+        ));
+        forecast.put("hourly", new AttributeValue().withM(hourly));
+
+        // Process hourly units
+        JsonNode hourlyUnitsNode = root.path("hourly_units");
+        Map<String, AttributeValue> hourlyUnits = new HashMap<>();
+        hourlyUnits.put("temperature_2m", new AttributeValue().withS(hourlyUnitsNode.path("temperature_2m").asText()));
+        hourlyUnits.put("time", new AttributeValue().withS(hourlyUnitsNode.path("time").asText()));
+        forecast.put("hourly_units", new AttributeValue().withM(hourlyUnits));
+
+        // Add latitude, longitude, timezone, etc.
+        forecast.put("latitude", new AttributeValue().withN(String.valueOf(root.path("latitude").asDouble())));
+        forecast.put("longitude", new AttributeValue().withN(String.valueOf(root.path("longitude").asDouble())));
+        forecast.put("timezone", new AttributeValue().withS(root.path("timezone").asText()));
+        forecast.put("timezone_abbreviation", new AttributeValue().withS(root.path("timezone_abbreviation").asText()));
+        forecast.put("utc_offset_seconds", new AttributeValue().withN(String.valueOf(root.path("utc_offset_seconds").asInt())));
+
+        // Add forecast to the main entry
+        weatherEntry.put("forecast", new AttributeValue().withM(forecast));
+
+        return weatherEntry;
     }
 
-    private void storeDataInDynamoDB(String weatherData) {
-        JsonNode weatherJson;
-        try {
-            weatherJson = mapper.readTree(weatherData);
+    private void storeDataInDynamoDB(Map<String, AttributeValue> weatherData) {
+        AmazonDynamoDB dynamoDBClient = AmazonDynamoDBClientBuilder.defaultClient();
+        DynamoDB dynamoDB = new DynamoDB(dynamoDBClient);
 
-            Table table = dynamoDBClient.getTable(tableName);
-            table.putItem(new PutItemSpec()
-                    .withItem(new ValueMap()
-                            .with("id", UUID.randomUUID().toString())
-                            .with("forecast", weatherJson.toString())
-                    ));
+        // Get the table and prepare an item to insert
+        Table table = dynamoDB.getTable(tableName);
+        Item item = new Item().withPrimaryKey("id", weatherData.get("id").getS())
+                .withMap("forecast", weatherData.get("forecast").getM());
+
+        // Put the item into the table
+        table.putItem(item);
+    }
+
+    private String generateBadRequestResponse(String path, String method) {
+        try {
+            ObjectNode responseJson = mapper.createObjectNode();
+            responseJson.put("statusCode", 400);
+            responseJson.put("message", String.format("Bad request syntax or unsupported method. Request path: %s. HTTP method: %s", path, method));
+            return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(responseJson);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to store weather data in DynamoDB", e);
+            return "Error generating bad request response";
         }
     }
+
+
 }
