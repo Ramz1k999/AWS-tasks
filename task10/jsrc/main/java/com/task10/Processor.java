@@ -90,6 +90,8 @@ public class Processor implements RequestHandler<Object, String> {
         try {
             AWSXRay.beginSegment("Processor");
 
+            dynamoDBClient.putItem(new PutItemRequest().withTableName(tableName).withItem(weatherEntry));
+
             String weatherJson = getWeatherForecast(URL);
 
             Map<String, AttributeValue> weatherEntry = transformWeatherJsonToMap(weatherJson);
@@ -152,16 +154,6 @@ private static Map<String, AttributeValue> transformWeatherJsonToMap(String json
         weatherEntry.put("forecast", new AttributeValue().withM(forecast));
 
         return weatherEntry;
-    }
-
-    private void storeDataInDynamoDB(Map<String, AttributeValue> weatherData) {
-        // Get the table and prepare an item to insert
-        Table table = dynamoDBClient.getTable(tableName);
-        Item item = new Item().withPrimaryKey("id", weatherData.get("id").getS())
-                .withMap("forecast", weatherData.get("forecast").getM());
-
-        // Put the item into the table
-        table.putItem(item);
     }
 
     private String generateBadRequestResponse(String path, String method) {
