@@ -1,12 +1,39 @@
 package com.task10;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.syndicate.deployment.annotations.lambda.LambdaHandler;
+import com.syndicate.deployment.annotations.lambda.LambdaLayer;
+import com.syndicate.deployment.annotations.lambda.LambdaUrlConfig;
+import com.syndicate.deployment.model.ArtifactExtension;
+import com.syndicate.deployment.model.DeploymentRuntime;
 import com.syndicate.deployment.model.RetentionSetting;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
+import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
+import com.syndicate.deployment.annotations.environment.EnvironmentVariable;
+import com.syndicate.deployment.annotations.environment.EnvironmentVariables;
+import com.syndicate.deployment.annotations.resources.DependsOn;
+import com.syndicate.deployment.model.*;
+import com.syndicate.deployment.model.lambda.url.AuthType;
+import com.syndicate.deployment.model.lambda.url.InvokeMode;
+
+
+import static com.openmeteo.OpenMeteoApiClient.getWeatherForecast;
+
+import java.util.Map;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+
 
 @LambdaHandler(lambdaName = "processor",
 	roleName = "processor-role",
@@ -38,14 +65,30 @@ public class Processor implements RequestHandler<Object, Map<String, Object>> {
     private final AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard()
 			.withRegion("eu-central-1")
 			.build();
-	private final String tableName = "cmtr-d0429c20-Weather-test";
+	private final String tableName = System.getenv("table");
 
 	public Map<String, Object> handleRequest(Object request, Context context) {
-		System.out.println("Hello from lambda");
-		Map<String, Object> resultMap = new HashMap<String, Object>();
-		resultMap.put("statusCode", 200);
-		resultMap.put("body", "Hello from Lambda");
-		return resultMap;
+		LambdaLogger logger = context.getLogger();
+
+        JsonNode inputNode = mapper.valueToTree(input);
+
+        String method = inputNode.path("requestContext").path("http").path("method").asText();
+        String path = inputNode.path("rawPath").asText();
+
+        // Check if the request is valid
+        if (!"/weather".equals(path) || !"GET".equals(method)) {
+            return generateBadRequestResponse(path, method);
+        }
+
+        try {
+            String response = fetchWeatherDataUsingOpenMeteo();
+            logger.log("Weather Data: " + response);
+            storeDataInDynamoDB(response);
+            return response;
+        } catch (Exception e) {
+            logger.log("Error: " + e.getMessage());
+            return "Failed to fetch weather data";
+        }
 	}
 
 	public static String fetchWeatherDataUsingOpenMeteo() throws Exception {
@@ -76,7 +119,7 @@ public class Processor implements RequestHandler<Object, Map<String, Object>> {
         try {
             weatherJson = mapper.readTree(weatherData);
 
-            Table table = dynamoDBClient.getTable(DYNAMODB_TABLE);
+            Table table = dynamoDBClient.getTable(tableName);
             table.putItem(new PutItemSpec()
                     .withItem(new ValueMap()
                             .with("id", UUID.randomUUID().toString())
