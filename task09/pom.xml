@@ -38,6 +38,26 @@
             <scope>system</scope>
             <systemPath>${basedir}/lib/open-meteo-1.0-SNAPSHOT.jar</systemPath>
         </dependency>
+                <!-- Jackson Databind (for JSON processing) -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.14.1</version> <!-- Use the latest version compatible with your setup -->
+        </dependency>
+
+        <!-- Jackson Core (if not included by jackson-databind) -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>2.14.1</version>
+        </dependency>
+
+        <!-- Jackson Annotations (for using annotations like @JsonProperty) -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>2.14.1</version>
+        </dependency>
     </dependencies>
 
     <build>

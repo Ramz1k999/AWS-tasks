@@ -17,6 +17,12 @@ import com.syndicate.deployment.model.lambda.url.InvokeMode;
 
 import static com.openmeteo.OpenMeteoApiClient.getWeatherForecast;
 
+import java.util.Map;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+
 @LambdaHandler(
     lambdaName = "api_handler",
 	roleName = "api_handler-role",
@@ -45,10 +51,11 @@ public class ApiHandler implements RequestHandler<Object, String> {
 	@Override
 	public String handleRequest(Object input, Context context) {
 		LambdaLogger logger = context.getLogger();
-		// Get the request path and method from the event input
-        String method = (String) ((java.util.Map<String, Object>) input).get("requestContext")
-                .get("http").get("method");
-        String path = (String) ((java.util.Map<String, Object>) input).get("rawPath");
+
+        JsonNode inputNode = mapper.valueToTree(input);
+
+        String method = inputNode.path("requestContext").path("http").path("method").asText();
+        String path = inputNode.path("rawPath").asText();
 
         // Check if the request is valid
         if (!"/weather".equals(path) || !"GET".equals(method)) {
