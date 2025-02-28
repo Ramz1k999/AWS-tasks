@@ -1,4 +1,4 @@
-package com.task08;
+package com.task09;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
@@ -15,9 +15,10 @@ import com.syndicate.deployment.model.RetentionSetting;
 import com.syndicate.deployment.model.lambda.url.AuthType;
 import com.syndicate.deployment.model.lambda.url.InvokeMode;
 
-import static com.openmeteo.OpenMeteoApiClient;
+import static com.openmeteo.OpenMeteoApiClient.getWeatherForecast;
 
-@LambdaHandler(lambdaName = "api_handler",
+@LambdaHandler(
+    lambdaName = "api_handler",
 	roleName = "api_handler-role",
 	layers = {"sdk-layer"},
 	runtime = DeploymentRuntime.JAVA17,
@@ -25,12 +26,14 @@ import static com.openmeteo.OpenMeteoApiClient;
 	aliasName = "learn",
 	logsExpiration = RetentionSetting.SYNDICATE_ALIASES_SPECIFIED
 )
-@LambdaLayer(layerName = "sdk-layer",
+@LambdaLayer(
+        layerName = "sdk-layer",
 		libraries = {"lib/open-meteo-1.0-SNAPSHOT.jar"},
 		runtime = DeploymentRuntime.JAVA17,
 		artifactExtension = ArtifactExtension.ZIP
 )
-@LambdaUrlConfig(authType = AuthType.NONE,
+@LambdaUrlConfig(
+        authType = AuthType.NONE,
 		invokeMode = InvokeMode.BUFFERED
 )
 public class ApiHandler implements RequestHandler<Object, String> {
@@ -53,7 +56,7 @@ public class ApiHandler implements RequestHandler<Object, String> {
 	}
 
 	public static String fetchWeatherDataUsingOpenMeteo() throws Exception {
-		String json = OpenMeteoApiClient.getWeatherForecast(URL);
+		String json = getWeatherForecast(URL);
 
 		return transformWeatherJson(json);
 	}
