@@ -89,5 +89,17 @@ public class ApiHandler implements RequestHandler<Object, String> {
 		finalJson.set("current", root.path("current"));
 
 		return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(finalJson);
+
 	}
+
+	private String generateBadRequestResponse(String path, String method) {
+        try {
+            ObjectNode responseJson = mapper.createObjectNode();
+            responseJson.put("statusCode", 400);
+            responseJson.put("message", String.format("Bad request syntax or unsupported method. Request path: %s. HTTP method: %s", path, method));
+            return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(responseJson);
+        } catch (Exception e) {
+            return "Error generating bad request response";
+        }
+    }
 }
