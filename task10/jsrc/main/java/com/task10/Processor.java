@@ -77,7 +77,7 @@ public class Processor implements RequestHandler<Object, String> {
 	public String handleRequest(Object input, Context context) {
 		LambdaLogger logger = context.getLogger();
 
-        JsonNode inputNode = mapper.valueToTree(input)
+        JsonNode inputNode = mapper.valueToTree(input);
 
         try {
             AWSXRay.beginSegment("Processor");
