@@ -77,14 +77,7 @@ public class Processor implements RequestHandler<Object, String> {
 	public String handleRequest(Object input, Context context) {
 		LambdaLogger logger = context.getLogger();
 
-        JsonNode inputNode = mapper.valueToTree(input);
-
-        String method = inputNode.path("requestContext").path("http").path("method").asText();
-        String path = inputNode.path("rawPath").asText();
-
-        if (!"/weather".equals(path) || !"GET".equals(method)) {
-            return generateBadRequestResponse(path, method);
-        }
+        JsonNode inputNode = mapper.valueToTree(input)
 
         try {
             AWSXRay.beginSegment("Processor");
