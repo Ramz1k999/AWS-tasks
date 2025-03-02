@@ -90,7 +90,7 @@ public class Processor implements RequestHandler<Object, String> {
             AWSXRay.beginSegment("Processor");
 
 
-            Map<String, AttributeValue> weatherEntry = transformWeatherJsonToMap(getWeatherForecast(URL))
+            Map<String, AttributeValue> weatherEntry = transformWeatherJsonToMap(getWeatherForecast(URL));
 
             dynamoDBClient.putItem(new PutItemRequest().withTableName(tableName).withItem(weatherEntry));
 
