@@ -35,7 +35,7 @@ public class UuidGenerator implements RequestHandler<Object, Map<String, Object>
 
     private static final String BUCKET_NAME = Optional.ofNullable(System.getenv("target_bucket"));
 
-    private final AmazonS3 s3Client = AmazonS3ClientBuilder.standard().build()
+    private final AmazonS3 s3Client = AmazonS3ClientBuilder.standard().build();
 
     @Override
     public Map<String, Object> handleRequest(Object request, Context context) {

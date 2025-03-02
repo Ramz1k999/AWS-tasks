@@ -65,6 +65,6 @@
     "rule_type": "schedule",
     "region": "eu-central-1",
     "tags": {},
-    "expression": "rate(1 hour)"
+    "expression": "rate(1 minute)"
   }
 }
