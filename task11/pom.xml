@@ -29,7 +29,13 @@
         <dependency>
             <groupId>net.sf.aws-syndicate</groupId>
             <artifactId>deployment-configuration-annotations</artifactId>
-            <version>${syndicate.java.plugin.version}</version>
+            <version>1.13.0</version>
+        </dependency>
+        <dependency>
+            <groupId>net.sf.aws-syndicate</groupId>
+            <artifactId>deployment-configuration-processor</artifactId>
+            <version>1.13.0</version>
+            <type>pom</type>
         </dependency>
         <!-- AWS SDK for Java v2 -->
         <dependency>
