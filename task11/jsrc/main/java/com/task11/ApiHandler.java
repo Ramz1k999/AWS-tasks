@@ -14,7 +14,8 @@ import com.syndicate.deployment.model.ResourceType;
 import com.syndicate.deployment.model.RetentionSetting;
 import com.syndicate.deployment.model.environment.ValueTransformer;
 
-
+import static com.syndicate.deployment.model.environment.ValueTransformer.USER_POOL_NAME_TO_CLIENT_ID;
+import static com.syndicate.deployment.model.environment.ValueTransformer.USER_POOL_NAME_TO_USER_POOL_ID;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,7 +39,7 @@ import java.util.Map;
         @EnvironmentVariable(key = "TABLES_TABLE_NAME", value = "${tables_table}"),
         @EnvironmentVariable(key = "RESERVATIONS_TABLE_NAME", value = "${reservations_table}")
 })
-public class ApiHandle implements RequestHandler<Map<String, Object>, Map<String, Object>> {
+public class ApiHandler implements RequestHandler<Map<String, Object>, Map<String, Object>> {
 
     private final CognitoService cognitoService = new CognitoService();
     private final DynamoDBService dynamoDBService = new DynamoDBService();

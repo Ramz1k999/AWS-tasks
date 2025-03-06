@@ -1,8 +1,7 @@
 package com.task11.handlers;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.task11.utilities.CognitoService;
-import com.task11.utilities.ResponseUtil;
+import com.task11.utilities.*;
 
 import java.util.Map;
 
@@ -11,7 +10,7 @@ public class AuthHandler {
 
     public Map<String, Object> handleSignup(Map<String, Object> request, Context context) {
         try {
-            Map<String, Object> result = cognitoService.signup(request);
+            Map<String, Object> result = cognitoService.signUp(request);
             return ResponseUtil.createResponse(200, result);
         } catch (Exception e) {
             return ResponseUtil.createResponse(400, "Signup failed: " + e.getMessage());
@@ -20,10 +19,10 @@ public class AuthHandler {
 
     public Map<String, Object> handleSignin(Map<String, Object> request, Context context) {
         try {
-            Map<String, Object> result = cognitoService.signin(request);
+            Map<String, Object> result = cognitoService.signIn(request);
             return ResponseUtil.createResponse(200, result);
         } catch (Exception e) {
             return ResponseUtil.createResponse(400, "Signin failed: " + e.getMessage());
         }
     }
-
+}

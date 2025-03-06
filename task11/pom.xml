@@ -65,12 +65,6 @@
             <version>2.20.120</version>
         </dependency>
 
-        <!-- Syndicate Framework Annotations -->
-        <dependency>
-            <groupId>com.syndicate</groupId>
-            <artifactId>syndicate-deployment-annotations</artifactId>
-            <version>1.1.0</version>
-        </dependency>
 
         <!-- Jackson for JSON Parsing -->
         <dependency>

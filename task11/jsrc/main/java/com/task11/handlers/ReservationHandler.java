@@ -1,8 +1,7 @@
 package com.task11.handlers;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.task11.utilities.DynamoDBService;
-import com.task11.utilities.ResponseUtil;
+import com.task11.utilities.*;
 
 import java.util.Map;
 
@@ -26,3 +25,4 @@ public class ReservationHandler {
             return ResponseUtil.createResponse(400, "Error creating reservation: " + e.getMessage());
         }
     }
+}

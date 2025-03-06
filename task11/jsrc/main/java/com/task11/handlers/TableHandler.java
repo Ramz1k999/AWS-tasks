@@ -1,8 +1,7 @@
 package com.task11.handlers;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.task11.utilities.DynamoDBService;
-import com.task11.utilities.ResponseUtil;
+import com.task11.utilities.*;
 
 import java.util.Map;
 
@@ -35,3 +34,4 @@ public class TableHandler {
             return ResponseUtil.createResponse(400, "Error fetching table details: " + e.getMessage());
         }
     }
+}

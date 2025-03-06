@@ -1,4 +1,4 @@
-package com.task11.util;
+package com.task11.utilities;
 
 import java.util.HashMap;
 import java.util.Map;
