@@ -24,6 +24,7 @@ import java.util.Map;
         lambdaName = "api_handler",
         roleName = "api_handler-role",
         runtime = DeploymentRuntime.JAVA17,
+        aliasName = "learn",
         isPublishVersion = false,
         logsExpiration = RetentionSetting.SYNDICATE_ALIASES_SPECIFIED
 )
