@@ -61,7 +61,7 @@ import java.util.stream.StreamSupport;
 @DependsOn(name = "Weather", resourceType = ResourceType.DYNAMODB_TABLE)
 @EnvironmentVariables(value = {
 		@EnvironmentVariable(key = "region", value = "${region}"),
-		@EnvironmentVariable(key = "target_table", value = "${target_table}")
+		@EnvironmentVariable(key = "table", value = "${target_table}")
 })
 
 public class Processor implements RequestHandler<Object, String> {
@@ -71,7 +71,7 @@ public class Processor implements RequestHandler<Object, String> {
     private final AmazonDynamoDB dynamoDBClient = AmazonDynamoDBClientBuilder.standard()
 			.withRegion("eu-central-1")
 			.build();
-	private final String tableName = System.getenv("target_table");
+	private final String tableName = System.getenv("table");
 
 	@Override
 	public String handleRequest(Object input, Context context) {
@@ -79,20 +79,11 @@ public class Processor implements RequestHandler<Object, String> {
 
         JsonNode inputNode = mapper.valueToTree(input);
 
-        String method = inputNode.path("requestContext").path("http").path("method").asText();
-        String path = inputNode.path("rawPath").asText();
-
-        if (!"/weather".equals(path) || !"GET".equals(method)) {
-            return generateBadRequestResponse(path, method);
-        }
-
         try {
             AWSXRay.beginSegment("Processor");
 
 
-            String weatherJson = getWeatherForecast(URL);
-
-            Map<String, AttributeValue> weatherEntry = transformWeatherJsonToMap(weatherJson);
+            Map<String, AttributeValue> weatherEntry = transformWeatherJsonToMap(getWeatherForecast(URL));
 
             dynamoDBClient.putItem(new PutItemRequest().withTableName(tableName).withItem(weatherEntry));
 

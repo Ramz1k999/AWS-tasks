@@ -1,0 +1,167 @@
+The Goal Of This Task is...
+To deploy a serverless API with the specified resources using AWS Lambda, DynamoDB for data storage, and Amazon Cognito for user authentication. The task is to create the API service for Tables Booking at your favorite restaurant.
+
+The following API resources must be defined:
+
+1. /signup POST
+
+Request:
+
+{
+      "firstName": // string
+      "lastName": // string
+      "email": // email validation
+      "password": // alphanumeric + any of "$%^*-_", 12+ chars
+  }
+
+Response:
+STATUS CODE:
+
+200 OK (Sign-up process is successful)
+400 Bad Request (There was an error in the request.)
+PLEASE NOTE: To prevent email quota errors during verification when integrating with Cognito UserPool:
+
+For Java:
+For Python:
+For Node.js:
+For .NET:
+2. /signin POST
+
+Request:
+
+{
+         "email": // email
+         "password": // alphanumeric + any of "$%^*", 12+ chars
+     }
+
+Response:
+
+{
+         "accessToken": // string
+     }
+
+STATUS CODE:
+
+200 OK (The request has succeeded. The server has processed the sign-in request, and the provided credentials (email and password) were valid. The response contains an $access token, which will be used for subsequent authenticated requests.)
+400 Bad Request (There was an error in the request.)
+AWS User Pool tokens have different roles: the identity token (ID token) authenticates users to resource servers, and the access token authorizes API operations. For example, use the ID token to call an API with Cognito as the authorizer in AWS API Gateway, and the access token to allow users to modify attributes; their headers are similar, but they use different keys. Essentially, in the case of Cognito the ID token should be used as value of accessToken in the /signin response.
+
+3. /tables GET
+
+Headers:
+Authorization: Bearer $accessToken
+Request: {}
+Response:
+
+{
+         "tables": [
+             {
+                 "id": // int
+                 "number": // int, number of the table
+                 "places": // int, amount of people to sit at the table
+                 "isVip": // boolean, is the table in the VIP hall
+                 "minOrder": // optional. int, table deposit required to book it
+             },
+             ...
+         ]
+     }
+
+
+STATUS CODE:
+
+200 OK (The request has succeeded. The server has processed the request and has returned a list of tables as specified in the response body. Each table includes details such as its ID, number, capacity, whether it's in the VIP hall, and optionally, the minimum order required to book it.)
+400 Bad Request (There was an error in the request.)
+4. /tables POST
+
+Headers:
+Authorization: Bearer $accessToken
+Request:
+
+{
+         "id": // int
+         "number": // int, number of the table
+         "places": // int, amount of people to sit at the table
+         "isVip": // boolean, is the table in the VIP hall
+         "minOrder": // optional. int, table deposit required to book it
+     }
+
+Response:
+
+
+{
+  "id": $table_id // int, id of the created table
+}
+
+STATUS CODE:
+
+200 OK (The request has succeeded. The server has successfully created a new table based on the information provided in the request body. The response contains the ID of the newly created table.)
+400 Bad Request (There was an error in the request.)
+5. /tables/{tableId} GET
+
+Headers:
+Authorization: Bearer $accessToken
+Request: {}
+Response:
+
+{
+         "id": // int
+         "number": // int, number of the table
+         "places": // int, amount of people to sit at the table
+         "isVip": // boolean, is the table in the VIP hall
+         "minOrder": // optional. int, table deposit required to book it
+     }
+
+STATUS CODE:
+
+200 OK (The request has succeeded. The server has processed the request and has returned information about the table specified by {tableId}. The response body contains details such as the table's ID, number, capacity, whether it's in the VIP hall, and optionally, the minimum order required to book it.)
+400 Bad Request (There was an error in the request.)
+6. /reservations POST
+
+Headers:
+Authorization: Bearer $accessToken
+Request:
+
+{
+         "tableNumber": // int, number of the table
+         "clientName": //string
+         "phoneNumber": //string
+         "date": // string in yyyy-MM-dd format
+         "slotTimeStart": // string in "HH:MM" format, like "13:00",
+         "slotTimeEnd": // string in "HH:MM" format, like "15:00"
+     }
+
+Response:
+
+{
+         "reservationId": // string uuidv4
+     }
+
+STATUS CODE:
+
+200 OK (The reservation was successfully created. The server has processed the request, and a new reservation has been successfully added to the system.)
+400 Bad Request (There was an error in the request. Possible reasons include invalid input, table not found, or conflicting reservations.)
+7. /reservations GET
+
+Headers:
+Authorization: Bearer $accessToken
+Request: {}
+Response:
+
+
+
+{
+         "reservations": [
+             {
+                 "tableNumber": // int, number of the table
+                 "clientName": //string
+                 "phoneNumber": //string
+                 "date": // string in yyyy-MM-dd format
+                 "slotTimeStart": // string in "HH:MM" format, like "13:00",
+                 "slotTimeEnd": // string in "HH:MM" format, like "15:00"
+             }
+         ]
+     }
+STATUS CODE:
+
+200 OK (The request has succeeded. The server has provided a list of reservations as specified in the response body.)
+400 Bad Request (There was an error in the request.)
